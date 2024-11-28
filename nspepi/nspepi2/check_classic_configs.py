@@ -634,11 +634,6 @@ class NamedExpression(CheckConfig):
 
         if commandParseTree.keyword_exists('clientSecurityMessage'):
             NamedExpression.register_classic_entity_name(commandParseTree)
-            logging.warning(("Client security expressions are deprecated"
-                " using this command [{}], please use"
-                " the advanced authentication policy command")
-                .format(str(commandParseTree).strip()))
-            return []
 
         named_expr[lower_expr_name] = expr_rule
 
@@ -654,9 +649,6 @@ class NamedExpression(CheckConfig):
             """
             NamedExpression.register_policy_entity_name(commandParseTree)
             NamedExpression.register_classic_entity_name(original_tree)
-            logging.warning(("Classic expressions are deprecated in"
-                " command [{}], please use the advanced expression")
-                .format(str(commandParseTree).strip()))
         else:
             NamedExpression.register_policy_entity_name(original_tree)
             if is_advanced_removed_expr_present(expr_rule):
@@ -762,7 +754,6 @@ class CMP(CheckConfig):
         # If state keyword is present then it is a
         # classic binding.
         if bind_cmd_tree.keyword_exists("state"):
-            bind_cmd_tree.set_invalid()
             return [bind_cmd_tree]
 
         policy_name = bind_cmd_tree.positional_value(0).value
@@ -1004,206 +995,6 @@ class AdvExpression(CheckConfig):
         return []
 
 
-@common.register_class_methods
-class Deprecation(CheckConfig):
-    """
-    Check the deprecated commands or parameters or expressions.
-    """
-
-    @common.register_for_cmd("add", "audit", "syslogPolicy")
-    @common.register_for_cmd("add", "audit", "nslogPolicy")
-    @common.register_for_cmd("add", "authorization", "policy")
-    @common.register_for_cmd("add", "vpn", "trafficPolicy")
-    @common.register_for_cmd("add", "tunnel", "trafficPolicy")
-    @common.register_for_cmd("add", "tm", "sessionPolicy")
-    def check_deprecated_classic_policy(self, commandParseTree):
-        """
-        Check the policies which can still use the classic
-        expressions.
-        """
-        rule_expr = commandParseTree.positional_value(1).value
-        commandParseTree = Deprecation.check_pos_expr(commandParseTree, 1, False)
-        if commandParseTree.invalid:
-            logging.warning(("Classic expression in the rule field is deprecated"
-                " for command [{}], please use the advanced expression")
-                .format(str(commandParseTree).strip()))
-        elif is_advanced_removed_expr_present(rule_expr):
-            commandParseTree.set_invalid()
-            return [commandParseTree]
-        return []
-
-    @common.register_for_cmd("add", "authentication", "certPolicy")
-    @common.register_for_cmd("add", "authentication", "negotiatePolicy")
-    @common.register_for_cmd("add", "authentication", "tacacsPolicy")
-    @common.register_for_cmd("add", "authentication", "samlPolicy")
-    @common.register_for_cmd("add", "authentication", "radiusPolicy")
-    @common.register_for_cmd("add", "authentication", "ldapPolicy")
-    @common.register_for_cmd("add", "authentication", "localPolicy")
-    @common.register_for_cmd("add", "authentication", "webAuthPolicy")
-    @common.register_for_cmd("add", "authentication", "dfaPolicy")
-    @common.register_for_cmd("add", "aaa", "preauthenticationpolicy")
-    def check_authentication_commands(self, commandParseTree):
-        """
-        Check the Authentication commands which are deprecated
-        """
-        logging.warning(("[{}] command is deprecated,"
-            " please use the advanced authentication policy command")
-            .format(str(commandParseTree).strip()))
-        return []
-
-    @common.register_for_cmd("set", "aaa", "preauthenticationparameter")
-    def check_aaa_preauth_params(self, commandParseTree):
-        """
-        Rule filed of "set aaa preauthenticationparameter"
-        command is deprecated.
-        """
-        if commandParseTree.keyword_exists('rule'):
-            logging.warning(("Client security expressions are deprecated"
-                " using this command [{}], please use the"
-                " advanced authentication policy command")
-                .format(str(commandParseTree).strip()))
-        return []
-
-    @common.register_for_cmd("add", "vpn", "sessionAction")
-    def check_vpn_sessionaction(self, commandParseTree):
-        """
-        clientSecurity filed of "add vpn sessionAction"
-        command is deprecated.
-        """
-        if commandParseTree.keyword_exists('clientSecurity'):
-            logging.warning(("Client security expressions are deprecated"
-                " using this command [{}], please use the"
-                " advanced authentication policy command")
-                .format(str(commandParseTree).strip()))
-        return []
-
-    @common.register_for_cmd("add", "vpn", "url")
-    def check_vpn_url(self, commandParseTree):
-        """
-        SelfAuth SSO type is deprecated
-        """
-        if commandParseTree.keyword_exists('ssotype'):
-            sso_type = commandParseTree.keyword_value("ssotype")[0].value.lower()
-            if sso_type == "selfauth":
-                logging.warning("Selfauth type is deprecated"
-                    " in command [{}]".format(str(commandParseTree).strip()))
-        return []
-
-    @common.register_for_cmd("add", "vpn", "portaltheme")
-    def check_vpn_portaltheme(self, commandParseTree):
-        """
-        Default, X1, and Greenbubble portal themes are
-        deprecated
-        """
-        if commandParseTree.keyword_exists('basetheme'):
-            base_theme = commandParseTree.keyword_value("basetheme")[0].value
-            if base_theme == "Default" or base_theme == "X1" \
-                or base_theme == "Greenbubble":
-                    logging.warning(("Default, GreenBubble and X1 themes"
-                        " are deprecated in command [{}],"
-                        " please use RfWebUI theme or RfWebUI based custom theme")
-                        .format(str(commandParseTree).strip()))
-        return []
-
-    @common.register_for_cmd("bind", "vpn", "vserver")
-    @common.register_for_cmd("bind", "vpn", "global")
-    def check_vpn_commands(self, commandParseTree):
-        """
-        Default, X1, and Greenbubble portal themes are
-        deprecated
-        """
-        if commandParseTree.keyword_exists('portaltheme'):
-            base_theme = commandParseTree.keyword_value("portaltheme")[0].value
-            if base_theme == "Default" or base_theme == "X1" \
-                or base_theme == "Greenbubble":
-                    logging.warning(("Default, GreenBubble and X1 themes"
-                        " are deprecated in command [{}],"
-                        " please use RfWebUI theme or RfWebUI based custom theme")
-                        .format(str(commandParseTree).strip()))
-        return []
-
-    @common.register_for_cmd("add", "dns", "action")
-    def check_dns_action(self, commandParseTree):
-        """
-        Rewrite_response and DROP action types are
-        deprecated.
-        """
-        action_type = commandParseTree.positional_value(1).value.lower()
-        if action_type == "rewrite_response":
-            logging.warning(("Rewrite_Response action type is deprecated in"
-                " command [{}], please use the replace_dns_answer_section"
-                " action type under Rewrite feature.")
-                .format(str(commandParseTree).strip()))
-        elif action_type == "drop":
-            logging.warning(("Drop action type is deprecated in"
-                " command [{}], please use the Drop"
-                " action type under Responder feature.")
-                .format(str(commandParseTree).strip()))
-        return []
-
-    @common.register_for_cmd("enable", "ns", "feature")
-    def check_ns_feature(self, commandParseTree):
-        """
-        SC, PQ, HDOSP, and CF features are deprecated.
-        """
-        features_to_remove = ["SC", "PQ", "HDOSP", "CF"]
-        num_of_enabled_features = commandParseTree.get_number_of_params()
-        for inx in range(num_of_enabled_features):
-            feature_node = commandParseTree.positional_value(inx)
-            feature_name = feature_node.value
-            if feature_name in features_to_remove:
-                logging.warning("SC, PQ, HDOSP, and CF features"
-                    " are deprecated in command [{}], please"
-                    " use the APPQOE, REWRITE, and RESPONDER features"
-                    .format(str(commandParseTree).strip()))
-                break
-        return []
-
-    @common.register_for_cmd("add", "videooptimization", "pacingpolicy")
-    @common.register_for_cmd("add", "videooptimization", "pacingaction")
-    @common.register_for_cmd("add", "videooptimization", "pacingpolicylabel")
-    @common.register_for_cmd("bind", "videooptimization", "globalpacing")
-    @common.register_for_cmd("bind", "videooptimization", "pacingpolicylabel")
-    def check_deprecated_pacingcommands(self, commandParseTree):
-        """
-        Check the videooptimization pacing commands
-        """
-        if (commandParseTree.ot == "pacingpolicy"):
-            rule_expr = commandParseTree.keyword_value("rule")[0].value
-            if is_advanced_removed_expr_present(rule_expr):
-                commandParseTree.set_invalid()
-                return [commandParseTree]
-
-        logging.warning(("[{}] command is deprecated")
-            .format(str(commandParseTree).strip()))
-        return []
-
-    @common.register_for_cmd("add", "lsn", "appsattributes")
-    @common.register_for_cmd("add", "lsn", "appsprofile")
-    @common.register_for_cmd("add", "lsn", "client")
-    @common.register_for_cmd("add", "lsn", "group")
-    @common.register_for_cmd("add", "lsn", "httphdrlogprofile")
-    @common.register_for_cmd("add", "lsn", "ip6profile")
-    @common.register_for_cmd("add", "lsn", "logprofile")
-    @common.register_for_cmd("add", "lsn", "pool")
-    @common.register_for_cmd("add", "lsn", "rtspalgprofile")
-    @common.register_for_cmd("add", "lsn", "sipalgprofile")
-    @common.register_for_cmd("add", "lsn", "static")
-    @common.register_for_cmd("add", "lsn", "transportprofile")
-    @common.register_for_cmd("bind", "lsn", "appsprofile")
-    @common.register_for_cmd("bind", "lsn", "client")
-    @common.register_for_cmd("bind", "lsn", "group")
-    @common.register_for_cmd("bind", "lsn", "pool")
-    @common.register_for_cmd("set", "lsn", "parameter")
-    def check_lsn_commands(self, commandParseTree):
-        """
-        Check the Authentication commands which are deprecated
-        """
-        if (int(build_version.split(".")[0]) > 13):
-            logging.warning(("[{}] command is deprecated")
-                .format(str(commandParseTree).strip()))
-        return []
-
 
 @common.register_class_methods
 class Responder(CheckConfig):
@@ -1221,10 +1012,6 @@ class Responder(CheckConfig):
             commandParseTree, [2, "reasonPhrase", "headers"])
         if commandParseTree.invalid:
             return [commandParseTree]
-        action_type = commandParseTree.positional_value(1).value.lower()
-        if action_type == "noop":
-            logging.warning("NOOP action type is deprecated"
-                " for command [{}]".format(str(commandParseTree).strip()))
         return []
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2021-2023 Citrix Systems, Inc.  All rights reserved.
+# Copyright 2021-2024 Citrix Systems, Inc.  All rights reserved.
 # Use of this software is governed by the license terms, if any,
 # which accompany or are included with this software.
 
@@ -13,7 +13,7 @@ Dependency packages: PLY, pytest
 
 # Ensure that the version string conforms to PEP 440:
 # https://www.python.org/dev/peps/pep-0440/
-__version__ = "1.0"
+__version__ = "1.1"
 
 import re
 import argparse
@@ -129,7 +129,7 @@ def check_config_file(infile, outfile, verbose):
 def main():
     desc = cleandoc(
         """
-        Checks whether invalid or deprecated config is present in input file
+        Checks whether invalid config is present in input file
         """)
     arg_parser = argparse.ArgumentParser(
         prog="configCheck",
@@ -146,7 +146,7 @@ def main():
         version='%(prog)s {}'.format(__version__))
     arg_parser.add_argument(
         '-B', '--buildVersion', default='13.1',
-        help="Build version for which invalid or depreacted commands"
+        help="Build version for which invalid commands"
 	" need to check")
     try:
         args = arg_parser.parse_args()
@@ -158,8 +158,6 @@ def main():
     check_classic_configs.check_configs_init()
     check_classic_configs.build_version = args.buildVersion
     new_path = os.path.join(conf_file_path, "issues_" + conf_file_name)
-    deprecated_file_name = os.path.join(conf_file_path, "deprecated_" + conf_file_name)
-    setup_logging(deprecated_file_name, logging.WARNING)
     with open(args.infile, 'r') as infile:
         with open(new_path, 'w') as outfile:
             check_config_file(infile, outfile, args.verbose)

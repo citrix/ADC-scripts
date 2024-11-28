@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2021-2023 Citrix Systems, Inc.  All rights reserved.
+# Copyright 2021-2024 Citrix Systems, Inc.  All rights reserved.
 # Use of this software is governed by the license terms, if any,
 # which accompany or are included with this software.
 
@@ -58,7 +58,7 @@ if (not -e $config_file) {
 }
 
 sub tool_usage() {
-    print "Usage: check_invalid_config <ns_config_file> -buildVersion <Build version for which invalid or depreacted commands need to check>\n";
+    print "Usage: check_invalid_config <ns_config_file> -buildVersion <Build version for which invalid commands need to check>\n";
 }
 
 my($filename, $dir_path) = fileparse($config_file);
@@ -70,7 +70,6 @@ if ($exit_status != 0) {
 	exit;
 }
 my $invalid_config_file = $dir_path."/issues_".$filename;
-my $deprecated_config_file = $dir_path."deprecated_".$filename;
 
 # Checks whether any command is present in the file
 if (!(-z $invalid_config_file)) {
@@ -78,20 +77,8 @@ if (!(-z $invalid_config_file)) {
 	system("cat $invalid_config_file");
 	print "\nThe nspepi upgrade tool can be useful in converting your configuration - see the documentation at https://docs.citrix.com/en-us/citrix-adc/current-release/appexpert/policies-and-expressions/introduction-to-policies-and-exp/converting-policy-expressions-nspepi-tool.html.\n";
 	print "\nNOTE: the nspepi tool doesn't convert the following configurations:\n\t1. SureConnect commands\n\t2. PriorityQueuing commands\n\t3. HTTP Denial of Service Protection commands\n\t4. HTMLInjection commands.\n";
-    if (!(-z $deprecated_config_file)) {
-        print "\nNOTE: some deprecated commands have also been detected in the config file, please check ".$deprecated_config_file." file for the deprecated commands.\n";
-    } else {
-        print "\nNOTE: No deprecated commands detected in the configuration.\n";
-    }
 } else {
-    if (!(-z $deprecated_config_file)) {
-        print "\nThe following configuration lines have been deprecated in ".$buildVersion." and will be removed in future releases:\n";
-        system("tail -n 10 $deprecated_config_file");
-        print "\nFor the complete deprecated commands, please see the output of ".$deprecated_config_file." file.\n";
-        print "\nNo invalid config detected with the configuration.\n";
-    } else {
-	    print "\nNo invalid or deprecated config detected with the configuration.\n";
-    }
+    print "\nNo invalid config detected with the configuration.\n";
 }
 print "\nUse pre-validation tool and nspepi tool available at https://github.com/citrix/ADC-scripts/tree/master/nspepi for the most complete and up-to-date version.\n"
 ### End check_invalid_config script
